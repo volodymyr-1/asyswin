@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Комплексный тестовый отчет AsysWin</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #333; }
+        .stat-label { color: #666; font-size: 12px; text-transform: uppercase; }
+        .success { border-left-color: #28a745; }
+        .failed { border-left-color: #dc3545; }
+        .error { border-left-color: #ffc107; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .test-list { max-height: 400px; overflow-y: auto; }
+        .test-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .test-item:last-child { border-bottom: none; }
+        .status-pas { color: #28a745; font-weight: bold; }
+        .status-fail { color: #dc3545; font-weight: bold; }
+        .status-error { color: #ffc107; font-weight: bold; }
+        .system-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .metric-item { background: #f8f9fa; padding: 10px; border-radius: 5px; }
+        .footer { text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Комплексный тестовый отчет AsysWin</h1>
+            <p><strong>Дата:</strong> 2026-03-22 16:47:09.693325</p>
+            <p><strong>Статус:</strong> <span class="success">Все тесты пройдены</span></p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">21</div>
+                <div class="stat-label">Всего тестов</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-number">21</div>
+                <div class="stat-label">Успешные</div>
+            </div>
+            <div class="stat-card failed">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Проваленные</div>
+            </div>
+            <div class="stat-card error">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Ошибки</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">100.0%</div>
+                <div class="stat-label">Успешность</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">0:00:25.597028</div>
+                <div class="stat-label">Время выполнения</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🧪 Детали тестов</h2>
+            <div class="test-list">
+        
+                <div class="test-item">
+                    <div>
+                        <strong>test_cpu_usage_measurement (tests.test_cpu_monitoring.TestCPUMonitoring.test_cpu_usage_measurement)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_find_textinputhost_process (tests.test_cpu_monitoring.TestCPUMonitoring.test_find_textinputhost_process)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_find_textinputhost_process_not_found (tests.test_cpu_monitoring.TestCPUMonitoring.test_find_textinputhost_process_not_found)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_get_process_info (tests.test_cpu_monitoring.TestCPUMonitoring.test_get_process_info)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_monitor_cpu_load_below_threshold (tests.test_cpu_monitoring.TestCPUMonitoring.test_monitor_cpu_load_below_threshold)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_monitor_cpu_load_threshold (tests.test_cpu_monitoring.TestCPUMonitoring.test_monitor_cpu_load_threshold)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_monitoring_duration (tests.test_cpu_monitoring.TestCPUMonitoring.test_monitoring_duration)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_terminate_process (tests.test_cpu_monitoring.TestCPUMonitoring.test_terminate_process)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_terminate_process_failure (tests.test_cpu_monitoring.TestCPUMonitoring.test_terminate_process_failure)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_full_monitoring_cycle (tests.test_cpu_monitoring.TestSystemMonitorIntegration.test_full_monitoring_cycle)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_monitoring_with_real_processes (tests.test_cpu_monitoring.TestSystemMonitorIntegration.test_monitoring_with_real_processes)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_cpu_monitoring_integration (tests.test_performance_monitoring.TestPerformanceMonitoring.test_cpu_monitoring_integration)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_high_cpu_load_scenario (tests.test_performance_monitoring.TestPerformanceMonitoring.test_high_cpu_load_scenario)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_monitoring_cleanup (tests.test_performance_monitoring.TestPerformanceMonitoring.test_monitoring_cleanup)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_monitoring_stress_test (tests.test_performance_monitoring.TestPerformanceMonitoring.test_monitoring_stress_test)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_monitoring_with_real_system (tests.test_performance_monitoring.TestPerformanceMonitoring.test_monitoring_with_real_system)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_process_termination_simulation (tests.test_performance_monitoring.TestPerformanceMonitoring.test_process_termination_simulation)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_textinputhost_detection (tests.test_performance_monitoring.TestPerformanceMonitoring.test_textinputhost_detection)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_tdd_cpu_monitoring_tests (tests.test_performance_monitoring.TestTDDApproach.test_tdd_cpu_monitoring_tests)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_tdd_performance_requirements (tests.test_performance_monitoring.TestTDDApproach.test_tdd_performance_requirements)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+                <div class="test-item">
+                    <div>
+                        <strong>test_full_automation_cycle (tests.test_file_operations_cycle.TestFileOperationsCycle.test_full_automation_cycle)</strong>
+                    </div>
+                    <div class="status-pas">✅ Пройден</div>
+                </div>
+            
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>💻 Системная информация</h2>
+            <div class="system-info">
+        
+                <div class="metric-item">
+                    <strong>CPU:</strong><br>
+                    8 ядер, 2601 MHz
+                </div>
+                <div class="metric-item">
+                    <strong>Память:</strong><br>
+                    15.9 GB всего<br>
+                    8.3 GB доступно<br>
+                    48.0% использовано
+                </div>
+                <div class="metric-item">
+                    <strong>Диск:</strong><br>
+                    232.8 GB всего<br>
+                    81.8 GB использовано<br>
+                    35.1% заполнено
+                </div>
+            
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>⚡ Метрики производительности</h2>
+            <div class="system-info">
+        
+            <div class="metric-item">
+                <strong>Время нагрузочного теста:</strong><br>
+                0.000 сек
+            </div>
+            <div class="metric-item">
+                <strong>Время мониторинга:</strong><br>
+                2.0 сек
+            </div>
+            <div class="metric-item">
+                <strong>Измерений CPU:</strong><br>
+                1
+            </div>
+        
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Отчет сгенерирован автоматически системой AsysWin</p>
+            <p>Для получения дополнительной информации см. JSON отчет</p>
+        </div>
+    </div>
+</body>
+</html>
+        

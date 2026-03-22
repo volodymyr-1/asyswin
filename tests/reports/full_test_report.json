@@ -1,0 +1,130 @@
+{
+  "start_time": "2026-03-22 16:47:09.693325",
+  "end_time": "2026-03-22 16:47:35.290353",
+  "total_tests": 21,
+  "passed_tests": 21,
+  "failed_tests": 0,
+  "error_tests": 0,
+  "test_details": [
+    {
+      "test": "test_cpu_usage_measurement (tests.test_cpu_monitoring.TestCPUMonitoring.test_cpu_usage_measurement)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_find_textinputhost_process (tests.test_cpu_monitoring.TestCPUMonitoring.test_find_textinputhost_process)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_find_textinputhost_process_not_found (tests.test_cpu_monitoring.TestCPUMonitoring.test_find_textinputhost_process_not_found)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_get_process_info (tests.test_cpu_monitoring.TestCPUMonitoring.test_get_process_info)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_monitor_cpu_load_below_threshold (tests.test_cpu_monitoring.TestCPUMonitoring.test_monitor_cpu_load_below_threshold)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_monitor_cpu_load_threshold (tests.test_cpu_monitoring.TestCPUMonitoring.test_monitor_cpu_load_threshold)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_monitoring_duration (tests.test_cpu_monitoring.TestCPUMonitoring.test_monitoring_duration)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_terminate_process (tests.test_cpu_monitoring.TestCPUMonitoring.test_terminate_process)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_terminate_process_failure (tests.test_cpu_monitoring.TestCPUMonitoring.test_terminate_process_failure)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_full_monitoring_cycle (tests.test_cpu_monitoring.TestSystemMonitorIntegration.test_full_monitoring_cycle)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_monitoring_with_real_processes (tests.test_cpu_monitoring.TestSystemMonitorIntegration.test_monitoring_with_real_processes)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_cpu_monitoring_integration (tests.test_performance_monitoring.TestPerformanceMonitoring.test_cpu_monitoring_integration)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_high_cpu_load_scenario (tests.test_performance_monitoring.TestPerformanceMonitoring.test_high_cpu_load_scenario)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_monitoring_cleanup (tests.test_performance_monitoring.TestPerformanceMonitoring.test_monitoring_cleanup)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_monitoring_stress_test (tests.test_performance_monitoring.TestPerformanceMonitoring.test_monitoring_stress_test)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_monitoring_with_real_system (tests.test_performance_monitoring.TestPerformanceMonitoring.test_monitoring_with_real_system)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_process_termination_simulation (tests.test_performance_monitoring.TestPerformanceMonitoring.test_process_termination_simulation)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_textinputhost_detection (tests.test_performance_monitoring.TestPerformanceMonitoring.test_textinputhost_detection)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_tdd_cpu_monitoring_tests (tests.test_performance_monitoring.TestTDDApproach.test_tdd_cpu_monitoring_tests)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_tdd_performance_requirements (tests.test_performance_monitoring.TestTDDApproach.test_tdd_performance_requirements)",
+      "status": "PASSED",
+      "traceback": null
+    },
+    {
+      "test": "test_full_automation_cycle (tests.test_file_operations_cycle.TestFileOperationsCycle.test_full_automation_cycle)",
+      "status": "PASSED",
+      "traceback": null
+    }
+  ],
+  "system_info": {
+    "cpu_count": 8,
+    "cpu_freq": 2601.0,
+    "memory_total": 17086836736,
+    "memory_available": 8892133376,
+    "memory_percent": 48.0,
+    "disk_total": 249936474112,
+    "disk_used": 87835787264,
+    "disk_percent": 35.1
+  },
+  "performance_metrics": {
+    "load_test_time": 0.0,
+    "monitoring_time": 2.0,
+    "cpu_history_length": 1
+  }
+}
