@@ -8,6 +8,7 @@
 import os
 import sys
 import time
+import threading
 from datetime import datetime
 from typing import List, Dict
 
@@ -172,14 +173,24 @@ class BaseApplication:
             self.widget.set_analyzing(True)
             logger.log_analysis("START", f"Actions: {summary['total']}")
 
-            self.background_analyzer.add_task(
-                task_data=actions, analyzer_func=self.llm_analyzer.analyze_actions
+            thread = threading.Thread(
+                target=self._run_analysis_task, args=(actions,), daemon=True
             )
+            thread.start()
         except Exception as e:
             self._print_status(f"[ERROR] Send to analysis failed: {e}")
             self.widget.set_analyzing(False)
             self.widget.notify_error(f"Error: {str(e)[:50]}")
             logger.error(f"Send to analysis failed: {e}", "ANALYSIS")
+
+    def _run_analysis_task(self, actions: List[Dict]):
+        """Run analysis in background thread - does not block GUI"""
+        try:
+            result = self.llm_analyzer.analyze_actions(actions)
+            self._on_analysis_complete(result)
+        except Exception as e:
+            print(f"[ANALYSIS] Thread error: {e}")
+            self.widget.set_analyzing(False)
 
     def _on_analysis_complete(self, result):
         try:

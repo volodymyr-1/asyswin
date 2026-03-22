@@ -102,40 +102,42 @@ class GeminiProvider(AIProvider):
             [f"{i + 1}. {action}" for i, action in enumerate(simplified)]
         )
 
-        return f"""Ты - помощник по автоматизации рабочих процессов. 
-Пользователь выполнил следующие действия на компьютере:
+        max_chars = 15000
+        if len(actions_text) > max_chars:
+            actions_text = "...[actions truncated]...\n" + actions_text[-max_chars:]
+
+        return f"""You are a workflow automation assistant. 
+User performed the following actions:
 
 {actions_text}
 
-Проанализируй эти действия и выполни следующее:
+Analyze and do the following:
 
-1. Определи ОБЩУЮ ЦЕЛЬ этих действий (что пользователь хотел сделать)
-2. Разбей на ЛОГИЧЕСКИЕ ПОДЗАДАЧИ (3-7 подзадач)
-3. Для каждой подзадачи напиши Python скрипт, который автоматизирует эти действия
+1. Determine the OVERALL GOAL of these actions
+2. Break into LOGICAL SUBTASKS (3-7 subtasks)
+3. For each subtask, write a Python script to automate it
 
-Используй следующие библиотеки:
-- pyautogui для управления мышью и клавиатурой
-- subprocess для запуска программ
-- keyboard для горячих клавиш
-- time для пауз
+Use these libraries:
+- pyautogui for mouse/keyboard control
+- subprocess for launching programs
+- time for pauses
 
-Верни ответ СТРОГО в формате JSON:
+Return answer in JSON format:
 {{
-    "goal": "Описание общей цели",
+    "goal": "Goal description",
     "subtasks": [
         {{
-            "name": "Название подзадачи",
-            "description": "Описание что делает",
-            "script": "Python код скрипта"
+            "name": "Subtask name",
+            "description": "Description",
+            "script": "Python code"
         }}
     ]
 }}
 
-Важно:
-- Скрипты должны быть рабочими и готовыми к запуску
-- Добавляй паузы между действиями (time.sleep)
-- Используй координаты из записанных действий где возможно
-- Скрипты должны быть автономными"""
+Important:
+- Scripts must be working and ready to run
+- Add pauses between actions (time.sleep)
+- Scripts must be self-contained"""
 
     def _simplify_actions(self, actions: List[Dict]) -> List[str]:
         """Упрощение и оптимизация действий"""
