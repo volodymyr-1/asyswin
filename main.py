@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AsysWin - Система автоматизации рабочих процессов
-Записывает действия пользователя, анализирует через Google Gemini и генерирует скрипты
+AsysWin - Automation System
+Records user actions, analyzes via Google Gemini and generates scripts
 
-Горячие клавиши:
-  F9  - Начать/остановить запись
-  F10 - Отправить на анализ
-  F11 - Показать предсказания (топ-3 сценариев)
-  ESC - Выход
+Hotkeys:
+  F9  - Start/stop recording
+  F10 - Send to analysis
+  F11 - Show predictions (top-3)
+  ESC - Exit
 
-Требования:
-  - Установите переменную окружения GEMINI_API_KEY
-  - Получите ключ: https://makersuite.google.com/app/apikey
+Requirements:
+  - Set GEMINI_API_KEY in .env file
+  - Get key: https://makersuite.google.com/app/apikey
 """
 
 import sys
@@ -23,14 +23,19 @@ load_dotenv()
 from base_application import BaseApplication
 from assistant_widget_recommended import AssistantWidgetRecommended
 from single_instance import check_single_instance, release_instance
+from automation_manager import AutomationManager
 
 
 class AsysWin(BaseApplication):
-    """Система автоматизации AsysWin"""
+    """AsysWin Automation System"""
 
     APP_NAME = "AsysWin"
     WIDGET_CLASS = AssistantWidgetRecommended
     WIDTH = 60
+
+    def __init__(self):
+        super().__init__()
+        self.auto_manager = AutomationManager()
 
 
 def main():
