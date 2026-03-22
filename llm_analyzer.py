@@ -67,25 +67,27 @@ class GeminiProvider(AIProvider):
         self.api_key = api_key
 
         self.client: Any = None
-        self.model_name = "gemini-1.5-flash"
+        self.model_name = "gemini-2.0-flash"
 
         if self.api_key and genai:
             try:
                 self.client = genai.Client(api_key=self.api_key)
             except Exception as e:
-                print(f"[GEMINI] Ошибка инициализации: {e}")
+                print(f"[GEMINI] Init error: {e}")
 
     def is_ready(self) -> bool:
-        return self.client is not None
+        return (
+            genai is not None and self.client is not None and self.api_key is not None
+        )
 
     def analyze_actions(self, actions: List[Dict]) -> Optional[Dict]:
         """Анализировать действия через Google Gemini"""
         if not actions:
-            print("[GEMINI] Нет действий для анализа")
+            print("[GEMINI] No actions to analyze")
             return None
 
         if not self.is_ready():
-            print("[GEMINI] API ключ не настроен")
+            print("[GEMINI] API key not configured")
             return None
 
         prompt = self._create_prompt(actions)
@@ -96,7 +98,13 @@ class GeminiProvider(AIProvider):
             )
             return self._parse_response(response.text)
         except Exception as e:
-            print(f"[GEMINI] Ошибка: {e}")
+            error_msg = str(e)
+            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+                print("[GEMINI] Quota exceeded! Wait and retry.")
+            elif "404" in error_msg:
+                print(f"[GEMINI] Model not found: {self.model_name}")
+            else:
+                print(f"[GEMINI] Error: {e}")
             return None
 
     def _create_prompt(self, actions: List[Dict]) -> str:
