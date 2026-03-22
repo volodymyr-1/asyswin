@@ -21,8 +21,38 @@ class AssistantWidgetAuto(BaseAssistantWidget):
 
         self.script_manager = None
         self.recommended_scripts = []
-        self.active_provider = "Gemini Pro"
+
+        from config_manager import get_config
+
+        config = get_config()
+        provider = config.get_active_provider()
+
+        provider_names = {
+            "lmstudio": "LM Studio (Local)",
+            "gemini": "Gemini Pro",
+            "openai": "GPT-4",
+            "groq": "Groq (Fast)",
+        }
+
+        self.active_provider = provider_names.get(provider, provider)
+        self.provider_label = None
         self.rec_container = None
+
+    def update_provider_display(self, provider: str):
+        """Update displayed provider name"""
+        provider_names = {
+            "lmstudio": "LM Studio (Local)",
+            "gemini": "Gemini Pro",
+            "openai": "GPT-4",
+            "groq": "Groq (Fast)",
+        }
+
+        self.active_provider = provider_names.get(provider, provider)
+
+        if self.provider_label:
+            self.provider_label.configure(text=f"🤖 {self.active_provider}")
+
+        print(f"[WIDGET] Provider updated: {self.active_provider}")
 
     def _create_extra_ui(self, parent):
         self._create_recommendations_area(parent)
@@ -50,13 +80,13 @@ class AssistantWidgetAuto(BaseAssistantWidget):
         )
         auto_badge.pack(side="left", padx=5)
 
-        provider_label = CTkLabel(
+        self.provider_label = CTkLabel(
             parent,
             text=f"🤖 {self.active_provider}",
             font=CTkFont(size=10),
             text_color=("gray50", "gray60"),
         )
-        provider_label.pack(side="left", padx=5)
+        self.provider_label.pack(side="left", padx=5)
 
     def _create_recommendations_area(self, parent):
         from customtkinter import (

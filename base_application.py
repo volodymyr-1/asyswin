@@ -14,7 +14,7 @@ from typing import List, Dict
 
 from logger import logger
 from action_recorder import ActionRecorder
-from llm_analyzer import LLMAnalyzer
+from llm_analyzer import LLMAnalyzer, create_provider
 from script_generator import ScriptGenerator
 from background_analyzer import BackgroundAnalyzer
 from predictor import Predictor
@@ -22,33 +22,36 @@ from activity_monitor import ActivityMonitor
 from script_tester import ScriptTester
 from settings_window import SettingsWindow
 from semantic_logger import SemanticLogger
+from config_manager import get_config
 
 
 class BaseApplication:
-    """Базовый класс приложения AsysWin"""
+    """AsysWin base application class"""
 
     APP_NAME = "AsysWin"
-    WIDGET_CLASS = None  # Переопределяется в наследниках
+    WIDGET_CLASS = None
     WIDTH = 60
 
     def __init__(self):
         self._print_banner()
 
-        # Инициализация модулей
+        self.config = get_config()
+
         self.recorder = ActionRecorder()
-        self.llm_analyzer = LLMAnalyzer()
+        self.llm_analyzer = self._create_llm_provider()
         self.script_generator = ScriptGenerator()
-        self.background_analyzer = BackgroundAnalyzer(cpu_limit=50.0)
+        self.background_analyzer = BackgroundAnalyzer(
+            cpu_limit=self.config.get("cpu_limit", 50.0)
+        )
         self.predictor = Predictor()
 
-        # Модули автоматизации
-        self.activity_monitor = ActivityMonitor(idle_threshold=30.0)
+        self.activity_monitor = ActivityMonitor(
+            idle_threshold=self.config.get("idle_threshold", 30.0)
+        )
         self.script_tester = ScriptTester(timeout=10)
 
-        # Семантическое логирование
         self.semantic_logger = SemanticLogger()
 
-        # Инициализация виджета
         if self.WIDGET_CLASS:
             self.widget = self.WIDGET_CLASS()
         else:
@@ -57,17 +60,63 @@ class BaseApplication:
         self._setup_widget_callbacks()
         self._setup_activity_monitor()
 
-        # Состояние
         self.is_running = True
         self.last_analysis_result = None
-        self.auto_mode = True
+        self.auto_mode = self.config.get("auto_record", True)
         self._analysis_in_progress = False
 
-        # Настройка горячих клавиш
         self._setup_hotkeys()
-
-        # Callback для фонового анализатора
         self.background_analyzer.set_on_complete(self._on_analysis_complete)
+
+    def _create_llm_provider(self):
+        """Create LLM provider from config"""
+        provider_name = self.config.get_active_provider()
+        provider_config = self.config.get_provider_config(provider_name)
+
+        print(f"[INIT] Initializing provider: {provider_name}")
+
+        try:
+            if provider_name == "lmstudio":
+                provider = create_provider("lmstudio", **provider_config)
+            elif provider_name == "gemini":
+                provider = create_provider("gemini", **provider_config)
+            elif provider_name == "openai":
+                provider = create_provider("openai", **provider_config)
+            elif provider_name == "groq":
+                provider = create_provider("groq", **provider_config)
+            else:
+                provider = create_provider("gemini", **provider_config)
+
+            if provider.is_ready():
+                print(f"[INIT] Provider {provider_name} ready")
+            else:
+                print(f"[INIT] Provider {provider_name} not available")
+
+            return provider
+
+        except Exception as e:
+            print(f"[INIT] Error creating provider: {e}")
+            return create_provider("gemini")
+
+    def _change_provider(self, new_provider: str):
+        """Change AI provider on the fly"""
+        print(f"[APP] Changing provider to: {new_provider}")
+
+        old_provider = self.llm_analyzer
+
+        try:
+            self.llm_analyzer = self._create_llm_provider()
+
+            if hasattr(self.widget, "update_provider_display"):
+                self.widget.update_provider_display(new_provider)
+
+            self.widget.robot_say(f"Switched to {new_provider}")
+            print(f"[APP] Provider changed to {new_provider}")
+
+        except Exception as e:
+            print(f"[APP] Error changing provider: {e}")
+            self.llm_analyzer = old_provider
+            self.widget.notify_error("Provider change failed")
 
     def _print_banner(self):
         """Output application banner - overridden"""
@@ -101,17 +150,28 @@ class BaseApplication:
         self.widget.on_open_settings = self._open_settings
 
     def _open_settings(self):
-        settings = SettingsWindow()
+        try:
+            from settings_window_enhanced import (
+                SettingsWindow as EnhancedSettingsWindow,
+            )
+
+            settings = EnhancedSettingsWindow()
+        except ImportError:
+            settings = SettingsWindow()
+
         settings.on_save = self._on_settings_saved
+        settings.on_provider_change = self._change_provider
         settings.show()
 
     def _on_settings_saved(self, config):
         self.recorder.mouse_move_threshold = config.get("mouse_threshold", 50)
-        self.recorder.key_debounce_ms = config.get("key_debounce", 100)
+        self.recorder.key_debounce_ms = config.get("key_debounce", 50)
         self.auto_mode = config.get("auto_record", True)
+        self.activity_monitor.idle_threshold = config.get("idle_threshold", 30.0)
+        self.background_analyzer.cpu_limit = config.get("cpu_limit", 50.0)
 
         self._print_status("[OK] Settings saved")
-        logger.info("Настройки обновлены", "CONFIG")
+        logger.info("Settings updated", "CONFIG")
 
     def _open_scripts_folder(self):
         import subprocess
