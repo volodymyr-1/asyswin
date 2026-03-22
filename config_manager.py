@@ -17,9 +17,13 @@ class ConfigManager:
         return {
             "ai_provider": "gemini",
             "lmstudio_url": "http://localhost:1234/v1",
+            "lmstudio_model": "auto",
             "gemini_api_key": "",
+            "gemini_model": "gemini-2.0-flash",
             "openai_api_key": "",
+            "openai_model": "gpt-4o-mini",
             "groq_api_key": "",
+            "groq_model": "llama-3.3-70b-versatile",
             "mouse_threshold": 50,
             "key_debounce": 50,
             "auto_record": True,
