@@ -148,8 +148,10 @@ class TestGroqProvider(unittest.TestCase):
 class TestLMStudioProvider(unittest.TestCase):
     """Тесты для LMStudioProvider"""
 
-    def test_create_lmstudio_provider(self):
+    @patch("llm_analyzer.requests.get")
+    def test_create_lmstudio_provider(self, mock_get):
         """Создание провайдера LM Studio"""
+        mock_get.return_value.status_code = 404
         provider = LMStudioProvider()
         self.assertFalse(provider.is_ready())
 
