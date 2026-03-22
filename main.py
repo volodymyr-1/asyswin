@@ -41,7 +41,7 @@ def main():
         app = AsysWin()
         app.run()
     except Exception as e:
-        print(f"\n❌ Критическая ошибка: {e}")
+        print(f"\n[!] Critical error: {e}")
         import traceback
 
         traceback.print_exc()

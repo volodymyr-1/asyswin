@@ -68,9 +68,9 @@ class BaseApplication:
         self.background_analyzer.set_on_complete(self._on_analysis_complete)
 
     def _print_banner(self):
-        """Вывести баннер приложения - переопределяется"""
+        """Output application banner - overridden"""
         print("=" * self.WIDTH)
-        print(f"🤖 {self.APP_NAME} - Система автоматизации рабочих процессов")
+        print(f"{self.APP_NAME} - Automation System")
         print("=" * self.WIDTH)
         print()
 
@@ -82,13 +82,13 @@ class BaseApplication:
         if self.auto_mode and not self.recorder.is_recording:
             self.recorder.start_recording()
             self.widget.set_recording(True)
-            self._print_status("🔴 Автозапись: пользователь активен")
+            self._print_status("[REC] Auto-record started: user active")
 
     def _on_user_idle(self):
         if self.auto_mode and self.recorder.is_recording and self.recorder.actions:
             self.recorder.stop_recording()
             self.widget.set_recording(False)
-            self._print_status("⏸ Автоостановка: простой > 30с")
+            self._print_status("[IDLE] Auto-stop: idle > 30s")
             self._send_to_analysis()
 
     def _setup_widget_callbacks(self):
@@ -108,7 +108,7 @@ class BaseApplication:
         self.recorder.key_debounce_ms = config.get("key_debounce", 100)
         self.auto_mode = config.get("auto_record", True)
 
-        self._print_status("⚙️ Настройки сохранены")
+        self._print_status("[OK] Settings saved")
         logger.info("Настройки обновлены", "CONFIG")
 
     def _open_scripts_folder(self):
@@ -145,39 +145,41 @@ class BaseApplication:
         if self.recorder.is_recording:
             self.recorder.stop_recording()
             self.widget.set_recording(False)
-            self._print_status("⏹ Запись остановлена")
+            self._print_status("[STOP] Recording stopped")
             logger.log_action(
-                "STOP_RECORDING", f"Действий: {len(self.recorder.actions)}"
+                "STOP_RECORDING", f"Actions: {len(self.recorder.actions)}"
             )
         else:
             self.recorder.start_recording()
             self.widget.set_recording(True)
-            self._print_status("🔴 Запись начата")
-            logger.log_action("START_RECORDING", "Запись начата")
+            self._print_status("[REC] Recording started")
+            logger.log_action("START_RECORDING", "Recording started")
 
     def _send_to_analysis(self):
         try:
             if not self.recorder.actions:
-                self._print_status("⚠️ Нет записанных действий для анализа")
-                self.widget.notify_error("Нет записанных действий")
-                logger.warning("Попытка анализа без записанных действий", "ANALYSIS")
+                self._print_status("[WARN] No recorded actions for analysis")
+                self.widget.notify_error("No recorded actions")
+                logger.warning("Analysis attempt without recorded actions", "ANALYSIS")
                 return
 
             actions = self.recorder.actions.copy()
             summary = self.recorder.get_actions_summary()
 
-            self._print_status(f"📤 Отправка на анализ ({summary['total']} действий)")
+            self._print_status(
+                f"[SEND] Sending for analysis ({summary['total']} actions)"
+            )
             self.widget.set_analyzing(True)
-            logger.log_analysis("START", f"Действий: {summary['total']}")
+            logger.log_analysis("START", f"Actions: {summary['total']}")
 
             self.background_analyzer.add_task(
                 task_data=actions, analyzer_func=self.llm_analyzer.analyze_actions
             )
         except Exception as e:
-            self._print_status(f"❌ Ошибка отправки на анализ: {e}")
+            self._print_status(f"[ERROR] Send to analysis failed: {e}")
             self.widget.set_analyzing(False)
-            self.widget.notify_error(f"Ошибка: {str(e)[:50]}")
-            logger.error(f"Ошибка отправки на анализ: {e}", "ANALYSIS")
+            self.widget.notify_error(f"Error: {str(e)[:50]}")
+            logger.error(f"Send to analysis failed: {e}", "ANALYSIS")
 
     def _on_analysis_complete(self, result):
         try:
@@ -190,8 +192,10 @@ class BaseApplication:
                     "duplicate"
                 ):
                     existing = generation_result["existing"]
-                    self._print_status(f"⚠️ Найден похожий скрипт: {existing['goal']}")
-                    self.widget.robot_say("Нашёл похожий скрипт! Хотите создать новый?")
+                    self._print_status(
+                        f"[WARN] Similar script found: {existing['goal']}"
+                    )
+                    self.widget.robot_say("Found similar script! Create new one?")
 
                     variants = self.script_generator.get_script_variants(result)
                     self._show_variant_selection(variants)
@@ -204,8 +208,8 @@ class BaseApplication:
                 self.predictor.add_pattern(self.recorder.actions, goal, subtasks)
 
                 if created_files:
-                    self._print_status("🧪 Тестирование сгенерированных скриптов...")
-                    self.widget.robot_say("Тестирую скрипты...")
+                    self._print_status("[TEST] Testing generated scripts...")
+                    self.widget.robot_say("Testing scripts...")
                     logger.log_analysis(
                         "TESTING", f"Тестирование {len(created_files)} скриптов"
                     )
@@ -214,7 +218,7 @@ class BaseApplication:
                             test_result = self.script_tester.test_script(script_path)
                             if test_result["syntax_valid"]:
                                 self._print_status(
-                                    f"  ✅ {os.path.basename(script_path)}"
+                                    f"  [OK] {os.path.basename(script_path)}"
                                 )
                                 logger.info(
                                     f"Скрипт прошёл тест: {os.path.basename(script_path)}",
@@ -223,7 +227,7 @@ class BaseApplication:
                             else:
                                 error = test_result["syntax_error"]
                                 self._print_status(
-                                    f"  ❌ {os.path.basename(script_path)}: {error[:50]}"
+                                    f"  [FAIL] {os.path.basename(script_path)}: {error[:50]}"
                                 )
                                 logger.error(
                                     f"Скрипт не прошёл тест: {os.path.basename(script_path)} - {error}",
@@ -233,24 +237,23 @@ class BaseApplication:
                 self.widget.set_analyzing(False)
                 self.widget.notify_analysis_complete(len(created_files))
                 self._print_status(
-                    f"✅ Анализ завершён. Создано файлов: {len(created_files)}"
+                    f"[OK] Analysis complete. Files created: {len(created_files)}"
                 )
                 logger.log_analysis("COMPLETE", f"Создано файлов: {len(created_files)}")
             else:
                 self.widget.set_analyzing(False)
-                self.widget.notify_error("Анализ не удался")
-                self.widget.robot_say("Что-то пошло не так...")
-                self._print_status("❌ Анализ не удался")
-                logger.log_analysis("FAILED", "Анализ не удался")
+                self.widget.notify_error("Analysis failed")
+                self.widget.robot_say("Something went wrong...")
+                self._print_status("[FAIL] Analysis failed")
         except Exception as e:
-            self._print_status(f"❌ Ошибка обработки результата: {e}")
+            self._print_status(f"[ERROR] Result processing error: {e}")
             self.widget.set_analyzing(False)
             self.widget.notify_error(f"Ошибка: {str(e)[:50]}")
             logger.error(f"Ошибка обработки результата анализа: {e}", "ANALYSIS")
 
     def _show_variant_selection(self, variants: List[Dict]):
         print("\n" + "=" * self.WIDTH)
-        print("📋 ВЫБЕРИТЕ ВАРИАНТ СКРИПТА:")
+        print("SCRIPT VARIANT SELECTION:")
         print("=" * self.WIDTH)
 
         for i, variant in enumerate(variants, 1):
@@ -258,7 +261,7 @@ class BaseApplication:
             print(f"   {variant['description']}")
 
         print("\n" + "=" * self.WIDTH)
-        print("Введите номер варианта (1-3) или 'new' для нового анализа:")
+        print("Enter variant number (1-3) or 'new' for new analysis:")
 
         self._apply_variant(variants[0])
 
@@ -275,7 +278,7 @@ class BaseApplication:
         self.predictor.display_predictions(predictions)
 
     def _exit(self):
-        self._print_status("👋 Завершение работы...")
+        self._print_status("[BYE] Shutting down...")
         self.is_running = False
 
         if self.recorder.is_recording:
@@ -293,40 +296,35 @@ class BaseApplication:
 
     def _print_help(self):
         print("\n" + "=" * self.WIDTH)
-        print(f"📖 СПРАВКА - {self.APP_NAME}")
+        print(f"HELP - {self.APP_NAME}")
         print("=" * self.WIDTH)
         print("""
-Горячие клавиши:
-  F9  - Начать/остановить запись действий
-  F10 - Отправить записанные действия на анализ
-  F11 - Показать топ-3 часто используемых сценариев
-  ESC - Выход из программы
+Hotkeys:
+  F9  - Start/stop recording
+  F10 - Send to analysis
+  F11 - Show top-3 scripts
+  ESC - Exit
 
-Как использовать:
-  1. Нажмите F9 для начала записи
-  2. Выполните нужные действия на компьютере
-  3. Нажмите F9 для остановки записи
-  4. Нажмите F10 для анализа и генерации скриптов
-  5. Скрипты сохранятся в папке generated_scripts/
+Usage:
+  1. Press F9 to start recording
+  2. Perform desired actions
+  3. Press F9 to stop
+  4. Press F10 to analyze
+  5. Scripts saved to generated_scripts/
 
-Фоновый анализ:
-  - Анализ выполняется в фоновом режиме
-  - Нагрузка на CPU ограничена 50%
-  - Результаты появляются автоматически
-
-Предсказания:
-  - Система запоминает ваши паттерны
-  - Нажмите F11 для просмотра топ-3 сценариев
-  - Готовые скрипты сохраняются в папке scripts/
+Background analysis:
+  - Analysis runs in background
+  - CPU limited to 50%
+  - Results appear automatically
 """)
         print("=" * self.WIDTH)
 
     def run(self):
         if not self.llm_analyzer.is_ready():
-            print("⚠️ API ключ Google Gemini не настроен!")
-            print("   Установите переменную окружения GEMINI_API_KEY")
-            print("   Получите ключ: https://makersuite.google.com/app/apikey")
-            print("   Анализ работать не будет.\n")
+            print("[!] Google Gemini API key not configured!")
+            print("    Set GEMINI_API_KEY in .env file")
+            print("    Get key: https://makersuite.google.com/app/apikey")
+            print("    Analysis will not work.\n")
 
         self.activity_monitor.start()
         self.background_analyzer.start()
@@ -334,9 +332,9 @@ class BaseApplication:
 
         self._print_help()
 
-        print("\n🟢 Система готова к работе. Ожидание команд...\n")
-        print("💡 Виджет-ассистент отображается в правом нижнем углу экрана")
-        print("🔄 Автоматический режим: запись при активности, анализ при простое")
+        print("\n[OK] System ready. Waiting for commands...\n")
+        print("[i] Assistant widget in bottom-right corner")
+        print("[i] Auto mode: record on activity, analyze on idle")
 
         try:
             while self.is_running:
