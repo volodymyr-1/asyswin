@@ -59,7 +59,12 @@ class GeminiProvider(AIProvider):
 
     def __init__(self, api_key: Optional[str] = None):
         raw_key = api_key or os.environ.get("GEMINI_API_KEY", "") or ""
-        self.api_key = raw_key.strip().strip('"').strip("'")
+        api_key = raw_key.strip().replace('"', "").replace("'", "")
+
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not configured in .env")
+
+        self.api_key = api_key
 
         self.client: Any = None
         self.model_name = "gemini-1.5-flash"
