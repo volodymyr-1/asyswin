@@ -61,6 +61,7 @@ class BaseApplication:
         self.is_running = True
         self.last_analysis_result = None
         self.auto_mode = True
+        self._analysis_in_progress = False
 
         # Настройка горячих клавиш
         self._setup_hotkeys()
@@ -157,6 +158,10 @@ class BaseApplication:
             logger.log_action("START_RECORDING", "Recording started")
 
     def _send_to_analysis(self):
+        if self._analysis_in_progress:
+            return
+        self._analysis_in_progress = True
+
         try:
             if not self.recorder.actions:
                 self._print_status("[WARN] No recorded actions for analysis")
@@ -182,6 +187,8 @@ class BaseApplication:
             self.widget.set_analyzing(False)
             self.widget.notify_error(f"Error: {str(e)[:50]}")
             logger.error(f"Send to analysis failed: {e}", "ANALYSIS")
+        finally:
+            self._analysis_in_progress = False
 
     def _run_analysis_task(self, actions: List[Dict]):
         """Run analysis in background thread - does not block GUI"""
@@ -263,26 +270,23 @@ class BaseApplication:
             logger.error(f"Ошибка обработки результата анализа: {e}", "ANALYSIS")
 
     def _show_variant_selection(self, variants: List[Dict]):
-        print("\n" + "=" * self.WIDTH)
-        print("SCRIPT VARIANT SELECTION:")
-        print("=" * self.WIDTH)
+        self._apply_variant_auto(variants)
 
-        for i, variant in enumerate(variants, 1):
-            print(f"\n{i}. {variant['name']}")
-            print(f"   {variant['description']}")
-
-        print("\n" + "=" * self.WIDTH)
-        print("Enter variant number (1-3) or 'new' for new analysis:")
-
-        self._apply_variant(variants[0])
-
-    def _apply_variant(self, variant: Dict):
-        analysis = variant["analysis"]
-        created_files = self.script_generator.generate_scripts(analysis, force_new=True)
-
-        if created_files:
-            self.widget.notify_analysis_complete(len(created_files))
-            self.widget.robot_say(f"Создал вариант: {variant['name']}!")
+    def _apply_variant_auto(self, variants: List[Dict]):
+        """Auto-apply first variant without blocking input()"""
+        if not variants:
+            return
+        variant = variants[0]
+        try:
+            analysis = variant["analysis"]
+            created_files = self.script_generator.generate_scripts(
+                analysis, force_new=True
+            )
+            if created_files:
+                self.widget.notify_analysis_complete(len(created_files))
+                self.widget.robot_say(f"Created variant: {variant['name']}")
+        except Exception as e:
+            print(f"[ERROR] Auto-apply variant failed: {e}")
 
     def _show_predictions(self):
         predictions = self.predictor.get_top_predictions(limit=3)
