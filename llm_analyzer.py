@@ -58,9 +58,11 @@ class GeminiProvider(AIProvider):
     """Google Gemini провайдер (основной)"""
 
     def __init__(self, api_key: Optional[str] = None):
-        super().__init__(api_key or os.environ.get("GEMINI_API_KEY", "") or "")
+        raw_key = api_key or os.environ.get("GEMINI_API_KEY", "") or ""
+        self.api_key = raw_key.strip().strip('"').strip("'")
+
         self.client: Any = None
-        self.model_name = "gemini-2.0-flash"
+        self.model_name = "gemini-1.5-flash"
 
         if self.api_key and genai:
             try:
