@@ -684,11 +684,23 @@ class LMStudioProvider(AIProvider):
 
             if response.status_code == 200:
                 result = response.json()
-                content = result["choices"][0]["message"]["content"]
-                return self._parse_response(content)
+                print(f"[LMSTUDIO] Response keys: {list(result.keys())}")
+
+                content = None
+                if "choices" in result and result["choices"]:
+                    content = result["choices"][0].get("message", {}).get("content")
+                elif "output" in result:
+                    content = result.get("output", {}).get("text", "")
+                elif "text" in result:
+                    content = result.get("text")
+
+                if content:
+                    return self._parse_response(content)
+                else:
+                    print(f"[LMSTUDIO] No content in response: {result}")
             else:
                 print(
-                    f"[LMSTUDIO] Error: {response.status_code} - {response.text[:300]}"
+                    f"[LMSTUDIO] Error: {response.status_code} - {response.text[:500]}"
                 )
 
         except Exception as e:
