@@ -37,12 +37,17 @@ class SettingsWindow:
     def show(self):
         self.window = ctk.CTkToplevel()
         self.window.title("AsysWin Settings")
-        self.window.geometry("650x750")
+        self.window.geometry("700x800")
         self.window.resizable(True, True)
-        self.window.minsize(500, 600)
 
         main_scroll = ctk.CTkScrollableFrame(self.window)
         main_scroll.pack(fill="both", expand=True, padx=10, pady=10)
+        main_scroll._canvas.bind(
+            "<Configure>",
+            lambda e: main_scroll._canvas.configure(
+                scrollregion=main_scroll._canvas.bbox("all")
+            ),
+        )
 
         self._create_provider_section(main_scroll)
 

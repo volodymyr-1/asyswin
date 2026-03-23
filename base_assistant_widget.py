@@ -26,7 +26,8 @@ class BaseAssistantWidget:
 
             ui_scale = get_config().get("ui_scale", 1.0)
             ui_scale = float(ui_scale)
-            ctk.set_widget_scaling(ui_scale)
+            if ui_scale != 1.0:
+                ctk.set_widget_scaling(ui_scale)
         except:
             pass
 
