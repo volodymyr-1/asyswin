@@ -37,7 +37,9 @@ class SettingsWindow:
     def show(self):
         self.window = ctk.CTkToplevel()
         self.window.title("AsysWin Settings")
-        self.window.geometry("600x700")
+        self.window.geometry("650x750")
+        self.window.resizable(True, True)
+        self.window.minsize(500, 600)
 
         main_scroll = ctk.CTkScrollableFrame(self.window)
         main_scroll.pack(fill="both", expand=True, padx=10, pady=10)
@@ -451,7 +453,6 @@ class SettingsWindow:
         grid.pack(fill="x", padx=15)
 
         current_scale = self.config.get("ui_scale", 1.0)
-        scale_var = ctk.StringVar(value=str(current_scale))
 
         ctk.CTkLabel(grid, text="Interface Scale:").grid(
             row=0, column=0, sticky="w", pady=5
@@ -461,14 +462,15 @@ class SettingsWindow:
         scale_frame.grid(row=0, column=1, sticky="w", padx=10, pady=5)
 
         scale_values = ["0.8", "0.9", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5"]
-        scale_menu = ctk.CTkOptionMenu(
+
+        self.scale_menu = ctk.CTkOptionMenu(
             scale_frame,
             values=scale_values,
-            variable=scale_var,
             width=100,
-            command=lambda v: self._on_scale_change(v),
+            command=self._on_scale_change,
         )
-        scale_menu.pack(side="left")
+        self.scale_menu.set(str(current_scale))
+        self.scale_menu.pack(side="left")
 
         ctk.CTkLabel(
             grid,
@@ -476,8 +478,6 @@ class SettingsWindow:
             font=ctk.CTkFont(size=10),
             text_color=("gray50", "gray60"),
         ).grid(row=1, column=1, sticky="w", padx=10)
-
-        self.scale_var = scale_var
 
     def _on_scale_change(self, value):
         try:
@@ -705,8 +705,8 @@ class SettingsWindow:
             self.config.set("cpu_limit", int(self.cpu_entry.get()))
             self.config.set("idle_threshold", int(self.idle_entry.get()))
 
-            if hasattr(self, "scale_var"):
-                self.config.set("ui_scale", float(self.scale_var.get()))
+            if hasattr(self, "scale_menu"):
+                self.config.set("ui_scale", float(self.scale_menu.get()))
 
             # Сохраняем выбранные модели
             if self.gemini_model_combo:
