@@ -405,6 +405,34 @@ class TestProviderManager:
 
         assert len(manager.connection_cache) == 0
 
+    @patch("provider_manager.get_config")
+    @patch("provider_manager.create_provider")
+    def test_reload_providers(self, mock_create_provider, mock_get_config):
+        """Тест перезагрузки провайдеров из конфига"""
+        mock_config = Mock()
+        mock_config.get.side_effect = lambda key, default="": {
+            "gemini_api_key": "test-gemini-key",
+            "openai_api_key": "test-openai-key",
+            "groq_api_key": "test-groq-key",
+            "lmstudio_url": "http://localhost:1234/v1",
+        }.get(key, default)
+        mock_get_config.return_value = mock_config
+
+        mock_provider = Mock()
+        mock_provider.is_ready.return_value = False
+        mock_create_provider.return_value = mock_provider
+
+        manager = ProviderManager()
+        original_providers = manager.providers.copy()
+
+        manager.reload_providers()
+
+        assert mock_create_provider.call_count >= 4
+        assert "gemini" in manager.providers
+        assert "openai" in manager.providers
+        assert "groq" in manager.providers
+        assert "lmstudio" in manager.providers
+
 
 class TestProviderManagerIntegration:
     """Интеграционные тесты для ProviderManager"""

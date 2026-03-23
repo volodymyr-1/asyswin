@@ -43,6 +43,9 @@ class TestAIProvider(unittest.TestCase):
             def analyze_actions(self, actions):
                 return None
 
+            def fetch_available_models(self):
+                return []
+
         provider = TestProvider(api_key="test_key")
         self.assertEqual(provider.api_key, "test_key")
 
@@ -217,6 +220,132 @@ class TestBackwardCompatibility(unittest.TestCase):
         from llm_analyzer import LLMAnalyzer
 
         self.assertIs(LLMAnalyzer, GeminiProvider)
+
+
+class TestFetchAvailableModels(unittest.TestCase):
+    """Тесты для метода fetch_available_models()"""
+
+    @patch("llm_analyzer.genai.Client")
+    def test_gemini_fetch_available_models(self, mock_client):
+        """Тест получения моделей Gemini"""
+        mock_model1 = Mock()
+        mock_model1.name = "models/gemini-2.0-flash"
+        mock_model1.display_name = "Gemini 2.0 Flash"
+        mock_model1.description = "Fast model"
+        mock_model1.output_token_limit = 8192
+        mock_model1.input_token_limit = 32768
+        mock_model1.supported_generation_methods = ["generateContent"]
+
+        mock_model2 = Mock()
+        mock_model2.name = "models/gemini-pro"
+        mock_model2.display_name = "Gemini Pro"
+        mock_model2.description = "Pro model"
+        mock_model2.output_token_limit = 8192
+        mock_model2.input_token_limit = 32768
+        mock_model2.supported_generation_methods = ["generateContent"]
+
+        mock_client.return_value.models.list.return_value = [mock_model1, mock_model2]
+
+        provider = GeminiProvider(api_key="test_key")
+        provider.client = mock_client.return_value
+
+        models = provider.fetch_available_models()
+
+        self.assertEqual(len(models), 2)
+        self.assertEqual(models[0]["id"], "gemini-2.0-flash")
+        self.assertEqual(models[0]["name"], "Gemini 2.0 Flash")
+        self.assertEqual(models[1]["id"], "gemini-pro")
+
+    @patch("llm_analyzer.requests.get")
+    def test_openai_fetch_available_models(self, mock_get):
+        """Тест получения моделей OpenAI"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "data": [
+                {"id": "gpt-4", "name": "GPT-4"},
+                {"id": "gpt-3.5-turbo", "name": "GPT-3.5 Turbo"},
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        provider = OpenAIProvider(api_key="test_key")
+        models = provider.fetch_available_models()
+
+        self.assertEqual(len(models), 2)
+        self.assertEqual(models[0]["id"], "gpt-4")
+        self.assertEqual(models[1]["id"], "gpt-3.5-turbo")
+
+    @patch("llm_analyzer.requests.get")
+    def test_groq_fetch_available_models(self, mock_get):
+        """Тест получения моделей Groq"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "data": [
+                {"id": "llama2-70b-4096", "name": "Llama 2 70B"},
+                {"id": "mixtral-8x7b-32768", "name": "Mixtral 8x7B"},
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        provider = GroqProvider(api_key="test_key")
+        models = provider.fetch_available_models()
+
+        self.assertEqual(len(models), 2)
+        self.assertEqual(models[0]["id"], "llama2-70b-4096")
+
+    @patch("llm_analyzer.requests.get")
+    def test_lmstudio_fetch_available_models(self, mock_get):
+        """Тест получения моделей LM Studio"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "data": [
+                {"id": "llama-2-7b-chat", "name": "Llama 2 7B Chat"},
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        provider = LMStudioProvider(api_url="http://localhost:1234/v1")
+        models = provider.fetch_available_models()
+
+        self.assertEqual(len(models), 1)
+        self.assertEqual(models[0]["id"], "llama-2-7b-chat")
+
+    def test_gemini_fetch_models_not_ready(self):
+        """Тест получения моделей когда провайдер не готов"""
+        provider = GeminiProvider()
+        models = provider.fetch_available_models()
+        self.assertEqual(models, [])
+
+    def test_openai_fetch_models_not_ready(self):
+        """Тест получения моделей OpenAI без ключа"""
+        provider = OpenAIProvider()
+        models = provider.fetch_available_models()
+        self.assertEqual(models, [])
+
+    @patch("llm_analyzer.requests.get")
+    def test_fetch_models_api_error(self, mock_get):
+        """Тест обработки ошибки API"""
+        mock_get.side_effect = Exception("Network error")
+
+        provider = OpenAIProvider(api_key="test_key")
+        models = provider.fetch_available_models()
+
+        self.assertEqual(models, [])
+
+    @patch("llm_analyzer.requests.get")
+    def test_fetch_models_http_error(self, mock_get):
+        """Тест обработки HTTP ошибки"""
+        mock_response = Mock()
+        mock_response.status_code = 401
+        mock_get.return_value = mock_response
+
+        provider = OpenAIProvider(api_key="invalid_key")
+        models = provider.fetch_available_models()
+
+        self.assertEqual(models, [])
 
 
 class TestIntegration(unittest.TestCase):

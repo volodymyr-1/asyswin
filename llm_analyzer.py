@@ -32,6 +32,11 @@ class AIProvider(ABC):
         """Анализировать действия пользователя"""
         pass
 
+    @abstractmethod
+    def fetch_available_models(self) -> List[Dict[str, Any]]:
+        """Получить список доступных моделей от API"""
+        pass
+
     def _parse_response(self, response: str) -> Optional[Dict]:
         """Универсальный парсер JSON из ответа LLM"""
         try:
@@ -221,6 +226,29 @@ Important:
 
         return result[-30:] if len(result) > 30 else result
 
+    def fetch_available_models(self) -> List[Dict[str, Any]]:
+        """Получить список доступных моделей Gemini"""
+        if not self.is_ready():
+            return []
+
+        try:
+            models = []
+            for model in self.client.models.list():
+                if "generateContent" in model.supported_generation_methods:
+                    models.append(
+                        {
+                            "id": model.name.replace("models/", ""),
+                            "name": model.display_name,
+                            "description": model.description or "",
+                            "max_tokens": model.output_token_limit or 8192,
+                            "context_window": model.input_token_limit or 32000,
+                        }
+                    )
+            return models
+        except Exception as e:
+            print(f"[GEMINI] Ошибка получения моделей: {e}")
+            return []
+
     def predict_next_actions(
         self, actions: List[Dict], patterns: List[Dict] = None
     ) -> Optional[Dict]:
@@ -340,6 +368,45 @@ class OpenAIProvider(AIProvider):
     ]
 }}"""
 
+    def fetch_available_models(self) -> List[Dict[str, Any]]:
+        """Получить список доступных моделей OpenAI"""
+        if not self.is_ready():
+            return []
+
+        try:
+            response = requests.get(
+                f"{self.base_url}/models",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                timeout=10,
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                models = []
+                for model in data.get("data", []):
+                    model_id = model.get("id", "")
+                    # Фильтруем только GPT модели
+                    if "gpt" in model_id.lower():
+                        models.append(
+                            {
+                                "id": model_id,
+                                "name": model_id.replace("-", " ").title(),
+                                "description": f"OpenAI {model_id}",
+                                "max_tokens": 16384,
+                                "context_window": 128000,
+                            }
+                        )
+                return models
+            else:
+                print(f"[OPENAI] Ошибка получения моделей: {response.status_code}")
+                return []
+        except Exception as e:
+            print(f"[OPENAI] Ошибка получения моделей: {e}")
+            return []
+
     def _simplify_actions(self, actions: List[Dict]) -> List[str]:
         """Упрощение действий"""
         simplified = []
@@ -429,6 +496,43 @@ class GroqProvider(AIProvider):
     ]
 }}"""
 
+    def fetch_available_models(self) -> List[Dict[str, Any]]:
+        """Получить список доступных моделей Groq"""
+        if not self.is_ready():
+            return []
+
+        try:
+            response = requests.get(
+                f"{self.base_url}/models",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                timeout=10,
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                models = []
+                for model in data.get("data", []):
+                    model_id = model.get("id", "")
+                    models.append(
+                        {
+                            "id": model_id,
+                            "name": model_id.replace("-", " ").title(),
+                            "description": f"Groq {model_id}",
+                            "max_tokens": model.get("max_tokens", 8192),
+                            "context_window": model.get("context_window", 8192),
+                        }
+                    )
+                return models
+            else:
+                print(f"[GROQ] Ошибка получения моделей: {response.status_code}")
+                return []
+        except Exception as e:
+            print(f"[GROQ] Ошибка получения моделей: {e}")
+            return []
+
     def _simplify_actions(self, actions: List[Dict]) -> List[str]:
         """Упрощение действий"""
         simplified = []
@@ -517,6 +621,47 @@ class LMStudioProvider(AIProvider):
         {{"name": "Название", "description": "Описание", "script": "Python код"}}
     ]
 }}"""
+
+    def fetch_available_models(self) -> List[Dict[str, Any]]:
+        """Получить список доступных моделей LM Studio"""
+        if not self.is_ready():
+            return []
+
+        base_url = self.api_url.rstrip("/").replace("/v1", "")
+
+        endpoints_to_try = [
+            f"{base_url}/api/v0/models",
+            f"{self.api_url}/models",
+        ]
+
+        for endpoint in endpoints_to_try:
+            try:
+                response = requests.get(endpoint, timeout=10)
+
+                if response.status_code == 200:
+                    data = response.json()
+                    models = []
+                    for model in data.get("data", []):
+                        model_id = model.get("id", "")
+                        models.append(
+                            {
+                                "id": model_id,
+                                "name": model_id,
+                                "description": f"Local model: {model_id}",
+                                "max_tokens": model.get("max_tokens", 4096),
+                                "context_window": model.get("context_window", 32000),
+                            }
+                        )
+                    if models:
+                        return models
+                elif response.status_code != 404:
+                    print(
+                        f"[LMSTUDIO] Endpoint {endpoint} returned {response.status_code}"
+                    )
+            except Exception as e:
+                print(f"[LMSTUDIO] Error trying {endpoint}: {e}")
+
+        return []
 
     def _simplify_actions(self, actions: List[Dict]) -> List[str]:
         """Упрощение действий"""

@@ -21,6 +21,7 @@ from llm_analyzer import (
     GroqProvider,
     LMStudioProvider,
 )
+from config_manager import get_config
 
 
 class ProviderStatus(Enum):
@@ -101,33 +102,50 @@ class ProviderManager:
         self._initialize_providers()
 
     def _initialize_providers(self):
-        """Инициализировать всех провайдеров"""
-        # Gemini
-        self.providers["gemini"] = GeminiProvider()
+        """Инициализировать всех провайдеров с ключами из конфига"""
+        config = get_config()
+
+        gemini_key = config.get("gemini_api_key", "")
+        openai_key = config.get("openai_api_key", "")
+        groq_key = config.get("groq_api_key", "")
+        lmstudio_url = config.get("lmstudio_url", "http://localhost:1234/v1")
+
+        self.providers["gemini"] = (
+            create_provider("gemini", api_key=gemini_key)
+            if gemini_key
+            else GeminiProvider()
+        )
         self.health_status["gemini"] = ProviderHealth(
             status=ProviderStatus.UNKNOWN, last_check=0, response_time=0
         )
 
-        # OpenAI
-        self.providers["openai"] = OpenAIProvider()
+        self.providers["openai"] = (
+            create_provider("openai", api_key=openai_key)
+            if openai_key
+            else OpenAIProvider()
+        )
         self.health_status["openai"] = ProviderHealth(
             status=ProviderStatus.UNKNOWN, last_check=0, response_time=0
         )
 
-        # Groq
-        self.providers["groq"] = GroqProvider()
+        self.providers["groq"] = (
+            create_provider("groq", api_key=groq_key) if groq_key else GroqProvider()
+        )
         self.health_status["groq"] = ProviderHealth(
             status=ProviderStatus.UNKNOWN, last_check=0, response_time=0
         )
 
-        # LM Studio
-        self.providers["lmstudio"] = LMStudioProvider()
+        self.providers["lmstudio"] = create_provider("lmstudio", api_url=lmstudio_url)
         self.health_status["lmstudio"] = ProviderHealth(
             status=ProviderStatus.UNKNOWN, last_check=0, response_time=0
         )
 
         # Загрузка моделей
         self._load_models()
+
+    def reload_providers(self):
+        """Перезагрузить провайдеров из конфига"""
+        self._initialize_providers()
 
     def _load_models(self):
         """Загрузить информацию о моделях из кэша или API"""

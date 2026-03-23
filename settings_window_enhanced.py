@@ -1,8 +1,9 @@
 """
-Enhanced settings window with AI provider selection
+Enhanced settings window with AI provider selection and dynamic model loading
 """
 
 import customtkinter as ctk
+import threading
 from config_manager import get_config
 
 
@@ -16,14 +17,21 @@ class SettingsWindow:
         self.provider_var = None
         self.lmstudio_url_entry = None
         self.gemini_key_entry = None
+        self.gemini_model_combo = None
         self.openai_key_entry = None
+        self.openai_model_combo = None
         self.groq_key_entry = None
+        self.groq_model_combo = None
+        self.lmstudio_model_combo = None
         self.mouse_entry = None
         self.key_entry = None
         self.auto_var = None
         self.cpu_entry = None
         self.idle_entry = None
         self.provider_frames = {}
+        self.model_frames = {}
+        self.loading_labels = {}
+        self.refresh_buttons = {}
 
     def show(self):
         self.window = ctk.CTkToplevel()
@@ -114,6 +122,39 @@ class SettingsWindow:
         )
         test_btn.grid(row=0, column=2, padx=5)
 
+        # Model selection
+        model_frame = ctk.CTkFrame(frame, fg_color="transparent")
+        model_frame.pack(fill="x", padx=15, pady=5)
+
+        ctk.CTkLabel(model_frame, text="Model:", width=120).grid(
+            row=0, column=0, sticky="w", pady=5
+        )
+
+        self.lmstudio_model_combo = ctk.CTkOptionMenu(
+            model_frame,
+            values=["Loading..."],
+            width=200,
+        )
+        self.lmstudio_model_combo.set(self.config.get("lmstudio_model", "auto"))
+        self.lmstudio_model_combo.grid(row=0, column=1, sticky="w", padx=10, pady=5)
+
+        # Loading indicator and refresh button
+        self.loading_labels["lmstudio"] = ctk.CTkLabel(
+            model_frame,
+            text="",
+            font=ctk.CTkFont(size=9),
+            text_color=("gray50", "gray60"),
+        )
+
+        self.refresh_buttons["lmstudio"] = ctk.CTkButton(
+            model_frame,
+            text="🔄",
+            width=30,
+            height=25,
+            command=lambda: self._refresh_models("lmstudio"),
+        )
+        self.refresh_buttons["lmstudio"].grid(row=0, column=2, padx=5)
+
         ctk.CTkLabel(
             frame,
             text="Start LM Studio -> Developer -> Start Server",
@@ -151,6 +192,39 @@ class SettingsWindow:
             ),
         )
         self.gemini_show_btn.grid(row=0, column=2, padx=5)
+
+        # Model selection
+        model_frame = ctk.CTkFrame(frame, fg_color="transparent")
+        model_frame.pack(fill="x", padx=15, pady=5)
+
+        ctk.CTkLabel(model_frame, text="Model:", width=120).grid(
+            row=0, column=0, sticky="w", pady=5
+        )
+
+        self.gemini_model_combo = ctk.CTkOptionMenu(
+            model_frame,
+            values=["Loading..."],
+            width=200,
+        )
+        self.gemini_model_combo.set(self.config.get("gemini_model", "gemini-2.0-flash"))
+        self.gemini_model_combo.grid(row=0, column=1, sticky="w", padx=10, pady=5)
+
+        # Loading indicator and refresh button
+        self.loading_labels["gemini"] = ctk.CTkLabel(
+            model_frame,
+            text="",
+            font=ctk.CTkFont(size=9),
+            text_color=("gray50", "gray60"),
+        )
+
+        self.refresh_buttons["gemini"] = ctk.CTkButton(
+            model_frame,
+            text="🔄",
+            width=30,
+            height=25,
+            command=lambda: self._refresh_models("gemini"),
+        )
+        self.refresh_buttons["gemini"].grid(row=0, column=2, padx=5)
 
         ctk.CTkLabel(
             frame,
@@ -190,6 +264,39 @@ class SettingsWindow:
         )
         self.openai_show_btn.grid(row=0, column=2, padx=5)
 
+        # Model selection
+        model_frame = ctk.CTkFrame(frame, fg_color="transparent")
+        model_frame.pack(fill="x", padx=15, pady=5)
+
+        ctk.CTkLabel(model_frame, text="Model:", width=120).grid(
+            row=0, column=0, sticky="w", pady=5
+        )
+
+        self.openai_model_combo = ctk.CTkOptionMenu(
+            model_frame,
+            values=["Loading..."],
+            width=200,
+        )
+        self.openai_model_combo.set(self.config.get("openai_model", "gpt-4o-mini"))
+        self.openai_model_combo.grid(row=0, column=1, sticky="w", padx=10, pady=5)
+
+        # Loading indicator and refresh button
+        self.loading_labels["openai"] = ctk.CTkLabel(
+            model_frame,
+            text="",
+            font=ctk.CTkFont(size=9),
+            text_color=("gray50", "gray60"),
+        )
+
+        self.refresh_buttons["openai"] = ctk.CTkButton(
+            model_frame,
+            text="🔄",
+            width=30,
+            height=25,
+            command=lambda: self._refresh_models("openai"),
+        )
+        self.refresh_buttons["openai"].grid(row=0, column=2, padx=5)
+
         ctk.CTkLabel(
             frame,
             text="Get key: https://platform.openai.com/api-keys",
@@ -227,6 +334,39 @@ class SettingsWindow:
             ),
         )
         self.groq_show_btn.grid(row=0, column=2, padx=5)
+
+        # Model selection
+        model_frame = ctk.CTkFrame(frame, fg_color="transparent")
+        model_frame.pack(fill="x", padx=15, pady=5)
+
+        ctk.CTkLabel(model_frame, text="Model:", width=120).grid(
+            row=0, column=0, sticky="w", pady=5
+        )
+
+        self.groq_model_combo = ctk.CTkOptionMenu(
+            model_frame,
+            values=["Loading..."],
+            width=200,
+        )
+        self.groq_model_combo.set(self.config.get("groq_model", "llama3-8b-8192"))
+        self.groq_model_combo.grid(row=0, column=1, sticky="w", padx=10, pady=5)
+
+        # Loading indicator and refresh button
+        self.loading_labels["groq"] = ctk.CTkLabel(
+            model_frame,
+            text="",
+            font=ctk.CTkFont(size=9),
+            text_color=("gray50", "gray60"),
+        )
+
+        self.refresh_buttons["groq"] = ctk.CTkButton(
+            model_frame,
+            text="🔄",
+            width=30,
+            height=25,
+            command=lambda: self._refresh_models("groq"),
+        )
+        self.refresh_buttons["groq"].grid(row=0, column=2, padx=5)
 
         ctk.CTkLabel(
             frame,
@@ -322,6 +462,92 @@ class SettingsWindow:
         if provider in self.provider_frames:
             self.provider_frames[provider].pack(fill="x", pady=5)
         self._update_provider_status(provider)
+        self._load_models_async(provider)
+
+    def _load_models_async(self, provider: str):
+        """Асинхронная загрузка моделей для провайдера"""
+        # Показываем индикатор загрузки
+        if provider in self.loading_labels:
+            self.loading_labels[provider].configure(text="Loading models...")
+            self.loading_labels[provider].pack(side="left", padx=5)
+
+        # Загружаем модели в отдельном потоке
+        thread = threading.Thread(
+            target=self._fetch_models_thread, args=(provider,), daemon=True
+        )
+        thread.start()
+
+    def _fetch_models_thread(self, provider: str):
+        """Поток загрузки моделей"""
+        try:
+            from provider_manager import ProviderManager
+
+            manager = ProviderManager()
+            models = manager.get_available_models(provider)
+
+            # Обновляем UI в главном потоке
+            if self.window:
+                self.window.after(0, self._update_models_ui, provider, models)
+        except Exception as e:
+            print(f"[SETTINGS] Error loading models for {provider}: {e}")
+            if self.window:
+                self.window.after(0, self._update_models_error, provider, str(e))
+
+    def _update_models_ui(self, provider: str, models: list):
+        """Обновить UI с загруженными моделями"""
+        if not self.window:
+            return
+
+        # Скрываем индикатор загрузки
+        if provider in self.loading_labels:
+            self.loading_labels[provider].pack_forget()
+
+        # Получаем список ID моделей
+        model_ids = [m.id for m in models] if models else ["Loading failed"]
+
+        # Обновляем соответствующий combo box
+        combo = None
+        if provider == "gemini" and self.gemini_model_combo:
+            combo = self.gemini_model_combo
+        elif provider == "openai" and self.openai_model_combo:
+            combo = self.openai_model_combo
+        elif provider == "groq" and self.groq_model_combo:
+            combo = self.groq_model_combo
+        elif provider == "lmstudio" and self.lmstudio_model_combo:
+            combo = self.lmstudio_model_combo
+
+        if combo:
+            combo.configure(values=model_ids)
+            # Устанавливаем первую модель по умолчанию
+            if model_ids and model_ids[0] != "Loading failed":
+                combo.set(model_ids[0])
+
+    def _update_models_error(self, provider: str, error: str):
+        """Обновить UI при ошибке загрузки моделей"""
+        if not self.window:
+            return
+
+        # Скрываем индикатор загрузки
+        if provider in self.loading_labels:
+            self.loading_labels[provider].pack_forget()
+
+        # Показываем сообщение об ошибке
+        if provider in self.loading_labels:
+            self.loading_labels[provider].configure(text=f"Error: {error[:30]}")
+            self.loading_labels[provider].pack(side="left", padx=5)
+
+    def _refresh_models(self, provider: str):
+        """Обновить модели для провайдера"""
+        if provider in self.refresh_buttons:
+            self.refresh_buttons[provider].configure(state="disabled")
+
+        self._load_models_async(provider)
+
+        # Включаем кнопку обратно через 2 секунды
+        if self.window and provider in self.refresh_buttons:
+            self.window.after(
+                2000, lambda: self.refresh_buttons[provider].configure(state="normal")
+            )
 
     def _update_provider_status(self, provider: str):
         from llm_analyzer import create_provider
@@ -398,7 +624,21 @@ class SettingsWindow:
             self.config.set("cpu_limit", int(self.cpu_entry.get()))
             self.config.set("idle_threshold", int(self.idle_entry.get()))
 
+            # Сохраняем выбранные модели
+            if self.gemini_model_combo:
+                self.config.set("gemini_model", self.gemini_model_combo.get())
+            if self.openai_model_combo:
+                self.config.set("openai_model", self.openai_model_combo.get())
+            if self.groq_model_combo:
+                self.config.set("groq_model", self.groq_model_combo.get())
+            if self.lmstudio_model_combo:
+                self.config.set("lmstudio_model", self.lmstudio_model_combo.get())
+
             self.config.save_config()
+
+            from provider_manager import ProviderManager
+
+            ProviderManager().reload_providers()
 
             if self.on_save:
                 self.on_save(self.config.get_all())
