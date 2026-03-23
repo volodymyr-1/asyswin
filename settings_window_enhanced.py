@@ -32,6 +32,7 @@ class SettingsWindow:
         self.model_frames = {}
         self.loading_labels = {}
         self.refresh_buttons = {}
+        self._loading_providers = set()
 
     def show(self):
         self.window = ctk.CTkToplevel()
@@ -466,7 +467,11 @@ class SettingsWindow:
 
     def _load_models_async(self, provider: str):
         """Асинхронная загрузка моделей для провайдера"""
-        # Показываем индикатор загрузки
+        if provider in self._loading_providers:
+            return
+
+        self._loading_providers.add(provider)
+
         if provider in self.loading_labels:
             self.loading_labels[provider].configure(text="Loading models...")
             try:
@@ -474,7 +479,6 @@ class SettingsWindow:
             except:
                 pass
 
-        # Загружаем модели в отдельном потоке
         thread = threading.Thread(
             target=self._fetch_models_thread, args=(provider,), daemon=True
         )
@@ -501,7 +505,8 @@ class SettingsWindow:
         if not self.window:
             return
 
-        # Скрываем индикатор загрузки
+        self._loading_providers.discard(provider)
+
         if provider in self.loading_labels:
             self.loading_labels[provider].pack_forget()
 
@@ -530,7 +535,8 @@ class SettingsWindow:
         if not self.window:
             return
 
-        # Скрываем индикатор загрузки
+        self._loading_providers.discard(provider)
+
         if provider in self.loading_labels:
             try:
                 self.loading_labels[provider].grid_forget()

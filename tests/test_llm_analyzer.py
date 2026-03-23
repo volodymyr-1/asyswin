@@ -234,7 +234,7 @@ class TestFetchAvailableModels(unittest.TestCase):
         mock_model1.description = "Fast model"
         mock_model1.output_token_limit = 8192
         mock_model1.input_token_limit = 32768
-        mock_model1.supported_generation_methods = ["generateContent"]
+        mock_model1.supported_actions = ["generateContent"]
 
         mock_model2 = Mock()
         mock_model2.name = "models/gemini-pro"
@@ -242,7 +242,7 @@ class TestFetchAvailableModels(unittest.TestCase):
         mock_model2.description = "Pro model"
         mock_model2.output_token_limit = 8192
         mock_model2.input_token_limit = 32768
-        mock_model2.supported_generation_methods = ["generateContent"]
+        mock_model2.supported_actions = ["generateContent"]
 
         mock_client.return_value.models.list.return_value = [mock_model1, mock_model2]
 

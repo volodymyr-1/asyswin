@@ -23,7 +23,7 @@ class ConfigManager:
             "openai_api_key": "",
             "openai_model": "gpt-4o-mini",
             "groq_api_key": "",
-            "groq_model": "llama-3.3-70b-versatile",
+            "groq_model": "llama3-8b-8192",
             "mouse_threshold": 50,
             "key_debounce": 50,
             "auto_record": True,
@@ -31,6 +31,10 @@ class ConfigManager:
             "idle_threshold": 30,
             "theme": "system",
             "show_notifications": True,
+            "provider_monitoring": True,
+            "fallback_enabled": True,
+            "connection_timeout": 30,
+            "max_retries": 3,
         }
 
     def _load_config(self) -> Dict[str, Any]:

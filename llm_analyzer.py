@@ -234,14 +234,18 @@ Important:
         try:
             models = []
             for model in self.client.models.list():
-                if "generateContent" in model.supported_generation_methods:
+                supported_actions = getattr(model, "supported_actions", []) or []
+                if "generateContent" in supported_actions:
                     models.append(
                         {
                             "id": model.name.replace("models/", ""),
-                            "name": model.display_name,
-                            "description": model.description or "",
-                            "max_tokens": model.output_token_limit or 8192,
-                            "context_window": model.input_token_limit or 32000,
+                            "name": getattr(model, "display_name", model.name)
+                            or model.name,
+                            "description": getattr(model, "description", "") or "",
+                            "max_tokens": getattr(model, "output_token_limit", 8192)
+                            or 8192,
+                            "context_window": getattr(model, "input_token_limit", 32000)
+                            or 32000,
                         }
                     )
             return models
@@ -563,11 +567,40 @@ class LMStudioProvider(AIProvider):
 
     def is_ready(self) -> bool:
         """Проверить доступность LM Studio"""
-        try:
-            response = requests.get(f"{self.api_url}/models", timeout=2)
-            return response.status_code == 200
-        except:
-            return False
+        base_url = self.api_url.rstrip("/").replace("/v1", "")
+        endpoints_to_try = [
+            f"{self.api_url}/models",
+            f"{base_url}/api/v0/models",
+        ]
+        for endpoint in endpoints_to_try:
+            try:
+                response = requests.get(endpoint, timeout=2)
+                if response.status_code == 200:
+                    return True
+            except:
+                pass
+        return False
+
+    def _get_loaded_model(self) -> Optional[str]:
+        """Get the currently loaded model from LM Studio"""
+        base_url = self.api_url.rstrip("/").replace("/v1", "")
+        endpoints_to_try = [
+            f"{base_url}/api/v0/models",
+            f"{self.api_url}/models",
+        ]
+        for endpoint in endpoints_to_try:
+            try:
+                response = requests.get(endpoint, timeout=5)
+                if response.status_code == 200:
+                    data = response.json()
+                    for model in data.get("data", []):
+                        if model.get("loaded", False):
+                            return model.get("id")
+                    if data.get("data"):
+                        return data["data"][0].get("id")
+            except:
+                pass
+        return None
 
     def analyze_actions(self, actions: List[Dict]) -> Optional[Dict]:
         """Анализировать действия через LM Studio"""
@@ -580,13 +613,19 @@ class LMStudioProvider(AIProvider):
 
         prompt = self._create_prompt(actions)
 
+        model_id = self._get_loaded_model() or "auto"
+
+        request_data = {
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.7,
+        }
+        if model_id and model_id != "auto":
+            request_data["model"] = model_id
+
         try:
             response = requests.post(
                 f"{self.api_url}/chat/completions",
-                json={
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.7,
-                },
+                json=request_data,
                 timeout=120,
             )
 
@@ -594,7 +633,9 @@ class LMStudioProvider(AIProvider):
                 content = response.json()["choices"][0]["message"]["content"]
                 return self._parse_response(content)
             else:
-                print(f"[LMSTUDIO] Ошибка: {response.status_code}")
+                print(
+                    f"[LMSTUDIO] Ошибка: {response.status_code} - {response.text[:200]}"
+                )
 
         except Exception as e:
             print(f"[LMSTUDIO] Ошибка: {e}")

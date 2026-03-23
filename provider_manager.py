@@ -76,10 +76,33 @@ class ProviderHealth:
     rate_limit_reset: float = 0
 
 
+_provider_manager_instance = None
+_provider_manager_lock = threading.Lock()
+
+
+def reset_provider_manager():
+    """Сбросить синглтон ProviderManager (для тестов)"""
+    global _provider_manager_instance
+    _provider_manager_instance = None
+
+
 class ProviderManager:
     """Менеджер AI провайдеров с улучшенным подключением"""
 
+    def __new__(cls):
+        global _provider_manager_instance
+        if _provider_manager_instance is None:
+            with _provider_manager_lock:
+                if _provider_manager_instance is None:
+                    instance = super().__new__(cls)
+                    instance._initialized = False
+                    _provider_manager_instance = instance
+        return _provider_manager_instance
+
     def __init__(self):
+        if self._initialized:
+            return
+
         self.providers: Dict[str, AIProvider] = {}
         self.health_status: Dict[str, ProviderHealth] = {}
         self.models: Dict[str, List[ModelInfo]] = {}
@@ -87,18 +110,16 @@ class ProviderManager:
         self.active_provider: str = "gemini"
         self.fallback_providers: List[str] = ["gemini", "openai", "groq", "lmstudio"]
 
-        # Кэширование подключений
         self.connection_cache: Dict[str, AIProvider] = {}
         self.connection_lock = threading.Lock()
 
-        # Мониторинг
         self.monitoring_thread = None
         self.monitoring_active = False
 
-        # Коллбэки
         self.on_status_change: Optional[Callable] = None
         self.on_fallback: Optional[Callable] = None
 
+        self._initialized = True
         self._initialize_providers()
 
     def _initialize_providers(self):

@@ -13,7 +13,16 @@ from provider_manager import (
     ModelInfo,
     ModelsCache,
     ProviderHealth,
+    reset_provider_manager,
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_singleton():
+    """Сбросить синглтон перед каждым тестом"""
+    reset_provider_manager()
+    yield
+    reset_provider_manager()
 
 
 class TestModelInfo:
