@@ -37,43 +37,40 @@ class SettingsWindow:
     def show(self):
         self.window = ctk.CTkToplevel()
         self.window.title("AsysWin Settings")
-        self.window.geometry("700x800")
+        self.window.geometry("650x900")
         self.window.resizable(True, True)
+        self.window.columnconfigure(0, weight=1)
 
-        main_scroll = ctk.CTkScrollableFrame(self.window)
-        main_scroll.pack(fill="both", expand=True, padx=10, pady=10)
-        main_scroll._canvas.bind(
-            "<Configure>",
-            lambda e: main_scroll._canvas.configure(
-                scrollregion=main_scroll._canvas.bbox("all")
-            ),
-        )
+        main_frame = ctk.CTkFrame(self.window)
+        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        main_frame.columnconfigure(0, weight=1)
 
-        self._create_provider_section(main_scroll)
+        self._create_provider_section(main_frame)
 
-        ctk.CTkFrame(main_scroll, height=2, fg_color=("gray70", "gray30")).pack(
-            fill="x", pady=15
-        )
+        sep1 = ctk.CTkFrame(main_frame, height=2, fg_color=("gray70", "gray30"))
+        sep1.pack(fill="x", pady=10)
+        sep1.configure(height=2)
 
-        self._create_recording_section(main_scroll)
+        self._create_recording_section(main_frame)
 
-        ctk.CTkFrame(main_scroll, height=2, fg_color=("gray70", "gray30")).pack(
-            fill="x", pady=15
-        )
+        sep2 = ctk.CTkFrame(main_frame, height=2, fg_color=("gray70", "gray30"))
+        sep2.pack(fill="x", pady=10)
+        sep2.configure(height=2)
 
-        self._create_automation_section(main_scroll)
+        self._create_automation_section(main_frame)
 
-        ctk.CTkFrame(main_scroll, height=2, fg_color=("gray70", "gray30")).pack(
-            fill="x", pady=15
-        )
+        sep3 = ctk.CTkFrame(main_frame, height=2, fg_color=("gray70", "gray30"))
+        sep3.pack(fill="x", pady=10)
+        sep3.configure(height=2)
 
-        self._create_ui_section(main_scroll)
+        self._create_ui_section(main_frame)
 
-        self._create_buttons(main_scroll)
+        self._create_buttons(main_frame)
 
     def _create_provider_section(self, parent):
         section = ctk.CTkFrame(parent, fg_color="transparent")
-        section.pack(fill="x", pady=5)
+        section.pack(fill="x", expand=True, pady=5)
+        section.columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             section, text="AI Provider", font=ctk.CTkFont(size=16, weight="bold")
@@ -390,14 +387,15 @@ class SettingsWindow:
 
     def _create_recording_section(self, parent):
         section = ctk.CTkFrame(parent, fg_color="transparent")
-        section.pack(fill="x", pady=5)
+        section.pack(fill="x", expand=True, pady=5)
+        section.columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             section, text="Recording", font=ctk.CTkFont(size=16, weight="bold")
         ).pack(anchor="w", pady=(0, 10))
 
         grid = ctk.CTkFrame(section, fg_color="transparent")
-        grid.pack(fill="x")
+        grid.pack(fill="x", expand=True)
 
         ctk.CTkLabel(grid, text="Mouse threshold (px):").grid(
             row=0, column=0, sticky="w", pady=5
@@ -420,14 +418,15 @@ class SettingsWindow:
 
     def _create_automation_section(self, parent):
         section = ctk.CTkFrame(parent, fg_color="transparent")
-        section.pack(fill="x", pady=5)
+        section.pack(fill="x", expand=True, pady=5)
+        section.columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             section, text="Automation", font=ctk.CTkFont(size=16, weight="bold")
         ).pack(anchor="w", pady=(0, 10))
 
         grid = ctk.CTkFrame(section, fg_color="transparent")
-        grid.pack(fill="x")
+        grid.pack(fill="x", expand=True)
 
         ctk.CTkLabel(grid, text="CPU limit (%):").grid(
             row=0, column=0, sticky="w", pady=5
@@ -445,14 +444,15 @@ class SettingsWindow:
 
     def _create_ui_section(self, parent):
         section = ctk.CTkFrame(parent, fg_color="transparent")
-        section.pack(fill="x", pady=5)
+        section.pack(fill="x", expand=True, pady=5)
+        section.columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             section, text="Interface", font=ctk.CTkFont(size=16, weight="bold")
         ).pack(anchor="w", pady=(0, 10))
 
         grid = ctk.CTkFrame(section, fg_color="transparent")
-        grid.pack(fill="x", padx=15)
+        grid.pack(fill="x", expand=True, padx=15)
 
         current_scale = self.config.get("ui_scale", 1.0)
 
