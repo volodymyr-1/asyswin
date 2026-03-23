@@ -469,7 +469,10 @@ class SettingsWindow:
         # Показываем индикатор загрузки
         if provider in self.loading_labels:
             self.loading_labels[provider].configure(text="Loading models...")
-            self.loading_labels[provider].pack(side="left", padx=5)
+            try:
+                self.loading_labels[provider].grid(row=0, column=3, padx=5)
+            except:
+                pass
 
         # Загружаем модели в отдельном потоке
         thread = threading.Thread(
@@ -529,12 +532,18 @@ class SettingsWindow:
 
         # Скрываем индикатор загрузки
         if provider in self.loading_labels:
-            self.loading_labels[provider].pack_forget()
+            try:
+                self.loading_labels[provider].grid_forget()
+            except:
+                pass
 
         # Показываем сообщение об ошибке
         if provider in self.loading_labels:
             self.loading_labels[provider].configure(text=f"Error: {error[:30]}")
-            self.loading_labels[provider].pack(side="left", padx=5)
+            try:
+                self.loading_labels[provider].grid(row=0, column=3, padx=5)
+            except:
+                pass
 
     def _refresh_models(self, provider: str):
         """Обновить модели для провайдера"""
