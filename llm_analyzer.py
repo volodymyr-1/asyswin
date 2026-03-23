@@ -565,12 +565,60 @@ class LMStudioProvider(AIProvider):
         super().__init__(api_key=None)
         self.api_url = api_url
 
+    def get_status(self) -> Dict[str, Any]:
+        """Get detailed status of LM Studio connection"""
+        status = {
+            "connected": False,
+            "models": [],
+            "loaded_model": None,
+            "server_info": None,
+        }
+        base_url = self.api_url.rstrip("/").replace("/v1", "").replace("/v1beta", "")
+
+        endpoints_to_try = [
+            f"{base_url}/api/v0/models",
+            f"{base_url}/v1/models",
+            f"{self.api_url}/models",
+        ]
+
+        for endpoint in endpoints_to_try:
+            try:
+                response = requests.get(endpoint, timeout=5)
+                if response.status_code == 200:
+                    status["connected"] = True
+                    data = response.json()
+                    status["models"] = [
+                        {
+                            "id": m.get("id"),
+                            "loaded": m.get("loaded", False),
+                        }
+                        for m in data.get("data", [])
+                    ]
+                    for m in data.get("data", []):
+                        if m.get("loaded", False):
+                            status["loaded_model"] = m.get("id")
+                            break
+                    if not status["loaded_model"] and status["models"]:
+                        status["loaded_model"] = status["models"][0].get("id")
+                    break
+            except Exception as e:
+                status["error"] = str(e)
+
+        try:
+            health_resp = requests.get(f"{self.api_url.rstrip('/')}/health", timeout=2)
+            if health_resp.status_code == 200:
+                status["server_info"] = health_resp.json()
+        except:
+            pass
+
+        return status
+
     def is_ready(self) -> bool:
         """Проверить доступность LM Studio"""
-        base_url = self.api_url.rstrip("/").replace("/v1", "")
+        base_url = self.api_url.rstrip("/").replace("/v1", "").replace("/v1beta", "")
         endpoints_to_try = [
-            f"{self.api_url}/models",
             f"{base_url}/api/v0/models",
+            f"{self.api_url}/models",
         ]
         for endpoint in endpoints_to_try:
             try:
@@ -583,9 +631,10 @@ class LMStudioProvider(AIProvider):
 
     def _get_loaded_model(self) -> Optional[str]:
         """Get the currently loaded model from LM Studio"""
-        base_url = self.api_url.rstrip("/").replace("/v1", "")
+        base_url = self.api_url.rstrip("/").replace("/v1", "").replace("/v1beta", "")
         endpoints_to_try = [
             f"{base_url}/api/v0/models",
+            f"{base_url}/v1/models",
             f"{self.api_url}/models",
         ]
         for endpoint in endpoints_to_try:
@@ -593,13 +642,14 @@ class LMStudioProvider(AIProvider):
                 response = requests.get(endpoint, timeout=5)
                 if response.status_code == 200:
                     data = response.json()
-                    for model in data.get("data", []):
-                        if model.get("loaded", False):
-                            return model.get("id")
-                    if data.get("data"):
-                        return data["data"][0].get("id")
-            except:
-                pass
+                    models_data = data.get("data", [])
+                    if models_data:
+                        for model in models_data:
+                            if model.get("loaded", False):
+                                return model.get("id")
+                        return models_data[0].get("id")
+            except Exception as e:
+                print(f"[LMSTUDIO] Model list error ({endpoint}): {e}")
         return None
 
     def analyze_actions(self, actions: List[Dict]) -> Optional[Dict]:
@@ -612,33 +662,37 @@ class LMStudioProvider(AIProvider):
             return None
 
         prompt = self._create_prompt(actions)
-
-        model_id = self._get_loaded_model() or "auto"
+        model_id = self._get_loaded_model()
+        print(f"[LMSTUDIO] Using model: {model_id}")
 
         request_data = {
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.7,
         }
-        if model_id and model_id != "auto":
+        if model_id:
             request_data["model"] = model_id
+
+        base_url = self.api_url.rstrip("/")
+        chat_endpoint = f"{base_url}/v1/chat/completions"
 
         try:
             response = requests.post(
-                f"{self.api_url}/chat/completions",
+                chat_endpoint,
                 json=request_data,
                 timeout=120,
             )
 
             if response.status_code == 200:
-                content = response.json()["choices"][0]["message"]["content"]
+                result = response.json()
+                content = result["choices"][0]["message"]["content"]
                 return self._parse_response(content)
             else:
                 print(
-                    f"[LMSTUDIO] Ошибка: {response.status_code} - {response.text[:200]}"
+                    f"[LMSTUDIO] Error: {response.status_code} - {response.text[:300]}"
                 )
 
         except Exception as e:
-            print(f"[LMSTUDIO] Ошибка: {e}")
+            print(f"[LMSTUDIO] Error: {e}")
 
         return None
 
