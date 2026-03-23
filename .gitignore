@@ -77,3 +77,6 @@ launch_log_*.txt
 # API keys (never commit)
 config.json
 secrets.json
+
+# Generated config
+asyswin_config.json
