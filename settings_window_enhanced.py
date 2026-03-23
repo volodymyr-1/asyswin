@@ -56,6 +56,12 @@ class SettingsWindow:
 
         self._create_automation_section(main_scroll)
 
+        ctk.CTkFrame(main_scroll, height=2, fg_color=("gray70", "gray30")).pack(
+            fill="x", pady=15
+        )
+
+        self._create_ui_section(main_scroll)
+
         self._create_buttons(main_scroll)
 
     def _create_provider_section(self, parent):
@@ -433,6 +439,53 @@ class SettingsWindow:
         self.idle_entry.insert(0, str(self.config.get("idle_threshold")))
         self.idle_entry.grid(row=1, column=1, sticky="w", padx=10, pady=5)
 
+    def _create_ui_section(self, parent):
+        section = ctk.CTkFrame(parent, fg_color="transparent")
+        section.pack(fill="x", pady=5)
+
+        ctk.CTkLabel(
+            section, text="Interface", font=ctk.CTkFont(size=16, weight="bold")
+        ).pack(anchor="w", pady=(0, 10))
+
+        grid = ctk.CTkFrame(section, fg_color="transparent")
+        grid.pack(fill="x", padx=15)
+
+        current_scale = self.config.get("ui_scale", 1.0)
+        scale_var = ctk.StringVar(value=str(current_scale))
+
+        ctk.CTkLabel(grid, text="Interface Scale:").grid(
+            row=0, column=0, sticky="w", pady=5
+        )
+
+        scale_frame = ctk.CTkFrame(grid, fg_color="transparent")
+        scale_frame.grid(row=0, column=1, sticky="w", padx=10, pady=5)
+
+        scale_values = ["0.8", "0.9", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5"]
+        scale_menu = ctk.CTkOptionMenu(
+            scale_frame,
+            values=scale_values,
+            variable=scale_var,
+            width=100,
+            command=lambda v: self._on_scale_change(v),
+        )
+        scale_menu.pack(side="left")
+
+        ctk.CTkLabel(
+            grid,
+            text="Restart required",
+            font=ctk.CTkFont(size=10),
+            text_color=("gray50", "gray60"),
+        ).grid(row=1, column=1, sticky="w", padx=10)
+
+        self.scale_var = scale_var
+
+    def _on_scale_change(self, value):
+        try:
+            scale = float(value)
+            self.config.set("ui_scale", scale)
+        except:
+            pass
+
     def _create_buttons(self, parent):
         button_frame = ctk.CTkFrame(parent, fg_color="transparent")
         button_frame.pack(fill="x", pady=20)
@@ -651,6 +704,9 @@ class SettingsWindow:
             self.config.set("auto_record", self.auto_var.get())
             self.config.set("cpu_limit", int(self.cpu_entry.get()))
             self.config.set("idle_threshold", int(self.idle_entry.get()))
+
+            if hasattr(self, "scale_var"):
+                self.config.set("ui_scale", float(self.scale_var.get()))
 
             # Сохраняем выбранные модели
             if self.gemini_model_combo:

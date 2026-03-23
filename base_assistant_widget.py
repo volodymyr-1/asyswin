@@ -21,6 +21,15 @@ class BaseAssistantWidget:
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
 
+        try:
+            from config_manager import get_config
+
+            ui_scale = get_config().get("ui_scale", 1.0)
+            ui_scale = float(ui_scale)
+            ctk.set_widget_scaling(ui_scale)
+        except:
+            pass
+
         self.width = width
         self.height = height
         self.title = title
