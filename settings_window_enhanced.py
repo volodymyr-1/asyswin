@@ -135,9 +135,7 @@ class SettingsWindow:
         model_frame = ctk.CTkFrame(frame, fg_color="transparent")
         model_frame.pack(fill="x", padx=15, pady=5)
 
-        ctk.CTkLabel(model_frame, text="Model:", width=120).grid(
-            row=0, column=0, sticky="w", pady=5
-        )
+        ctk.CTkLabel(model_frame, text="Model:", width=120).pack(side="left", pady=5)
 
         self.lmstudio_model_combo = ctk.CTkOptionMenu(
             model_frame,
@@ -145,9 +143,9 @@ class SettingsWindow:
             width=200,
         )
         self.lmstudio_model_combo.set(self.config.get("lmstudio_model", "auto"))
-        self.lmstudio_model_combo.grid(row=0, column=1, sticky="w", padx=10, pady=5)
+        self.lmstudio_model_combo.pack(side="left", padx=10, pady=5)
 
-        # Loading indicator and refresh button
+        # Loading indicator
         self.loading_labels["lmstudio"] = ctk.CTkLabel(
             model_frame,
             text="",
@@ -157,11 +155,12 @@ class SettingsWindow:
 
         self.refresh_buttons["lmstudio"] = ctk.CTkButton(
             model_frame,
-            text="🔄",
+            text="R",
             width=30,
             height=25,
             command=lambda: self._refresh_models("lmstudio"),
         )
+        self.refresh_buttons["lmstudio"].pack(side="left", padx=5)
         self.refresh_buttons["lmstudio"].grid(row=0, column=2, padx=5)
 
         ctk.CTkLabel(
@@ -206,9 +205,7 @@ class SettingsWindow:
         model_frame = ctk.CTkFrame(frame, fg_color="transparent")
         model_frame.pack(fill="x", padx=15, pady=5)
 
-        ctk.CTkLabel(model_frame, text="Model:", width=120).grid(
-            row=0, column=0, sticky="w", pady=5
-        )
+        ctk.CTkLabel(model_frame, text="Model:", width=120).pack(side="left", pady=5)
 
         self.gemini_model_combo = ctk.CTkOptionMenu(
             model_frame,
@@ -216,9 +213,8 @@ class SettingsWindow:
             width=200,
         )
         self.gemini_model_combo.set(self.config.get("gemini_model", "gemini-2.0-flash"))
-        self.gemini_model_combo.grid(row=0, column=1, sticky="w", padx=10, pady=5)
+        self.gemini_model_combo.pack(side="left", padx=10, pady=5)
 
-        # Loading indicator and refresh button
         self.loading_labels["gemini"] = ctk.CTkLabel(
             model_frame,
             text="",
@@ -228,11 +224,12 @@ class SettingsWindow:
 
         self.refresh_buttons["gemini"] = ctk.CTkButton(
             model_frame,
-            text="🔄",
+            text="R",
             width=30,
             height=25,
             command=lambda: self._refresh_models("gemini"),
         )
+        self.refresh_buttons["gemini"].pack(side="left", padx=5)
         self.refresh_buttons["gemini"].grid(row=0, column=2, padx=5)
 
         ctk.CTkLabel(
@@ -512,9 +509,13 @@ class SettingsWindow:
 
     def _on_provider_selected(self, provider: str):
         for frame in self.provider_frames.values():
-            frame.pack_forget()
+            try:
+                frame.pack_forget()
+            except:
+                pass
         if provider in self.provider_frames:
             self.provider_frames[provider].pack(fill="x", pady=5)
+        self.window.update_idletasks()
         self._update_provider_status(provider)
         self._load_models_async(provider)
 
@@ -526,9 +527,9 @@ class SettingsWindow:
         self._loading_providers.add(provider)
 
         if provider in self.loading_labels:
-            self.loading_labels[provider].configure(text="Loading models...")
+            self.loading_labels[provider].configure(text="Loading...")
             try:
-                self.loading_labels[provider].grid(row=0, column=3, padx=5)
+                self.loading_labels[provider].pack(side="left", padx=5)
             except:
                 pass
 
@@ -607,13 +608,13 @@ class SettingsWindow:
 
         if provider in self.loading_labels:
             try:
-                self.loading_labels[provider].grid_forget()
+                self.loading_labels[provider].pack_forget()
             except:
                 pass
 
             try:
-                self.loading_labels[provider].configure(text=f"Error: {error[:30]}")
-                self.loading_labels[provider].grid(row=0, column=3, padx=5)
+                self.loading_labels[provider].configure(text=f"Err: {error[:20]}")
+                self.loading_labels[provider].pack(side="left", padx=5)
             except:
                 pass
 
