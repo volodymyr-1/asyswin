@@ -672,7 +672,7 @@ class LMStudioProvider(AIProvider):
         if model_id:
             request_data["model"] = model_id
 
-        base_url = self.api_url.rstrip("/")
+        base_url = self.api_url.rstrip("/").replace("/v1", "").replace("/v1beta", "")
         chat_endpoint = f"{base_url}/v1/chat/completions"
 
         try:
