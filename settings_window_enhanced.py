@@ -505,15 +505,22 @@ class SettingsWindow:
         if not self.window:
             return
 
+        try:
+            if not self.window.winfo_exists():
+                return
+        except:
+            return
+
         self._loading_providers.discard(provider)
 
         if provider in self.loading_labels:
-            self.loading_labels[provider].pack_forget()
+            try:
+                self.loading_labels[provider].pack_forget()
+            except:
+                pass
 
-        # Получаем список ID моделей
         model_ids = [m.id for m in models] if models else ["Loading failed"]
 
-        # Обновляем соответствующий combo box
         combo = None
         if provider == "gemini" and self.gemini_model_combo:
             combo = self.gemini_model_combo
@@ -525,14 +532,22 @@ class SettingsWindow:
             combo = self.lmstudio_model_combo
 
         if combo:
-            combo.configure(values=model_ids)
-            # Устанавливаем первую модель по умолчанию
-            if model_ids and model_ids[0] != "Loading failed":
-                combo.set(model_ids[0])
+            try:
+                combo.configure(values=model_ids)
+                if model_ids and model_ids[0] != "Loading failed":
+                    combo.set(model_ids[0])
+            except Exception as e:
+                print(f"[SETTINGS] Error updating combo: {e}")
 
     def _update_models_error(self, provider: str, error: str):
         """Обновить UI при ошибке загрузки моделей"""
         if not self.window:
+            return
+
+        try:
+            if not self.window.winfo_exists():
+                return
+        except:
             return
 
         self._loading_providers.discard(provider)
@@ -543,10 +558,8 @@ class SettingsWindow:
             except:
                 pass
 
-        # Показываем сообщение об ошибке
-        if provider in self.loading_labels:
-            self.loading_labels[provider].configure(text=f"Error: {error[:30]}")
             try:
+                self.loading_labels[provider].configure(text=f"Error: {error[:30]}")
                 self.loading_labels[provider].grid(row=0, column=3, padx=5)
             except:
                 pass
